@@ -38,6 +38,7 @@ public class SqsService {
     		orderInfo.setCustomerContactEmail(order.getContactEmail());
     		orderInfo.setCustomerContactPhone(order.getContactPhone());
     		orderInfo.setRestaurantName(order.getRestaurantName());
+    		orderInfo.setOrderStatus("ORDERED");
     		
     		// Convert Order object to JSON string
     		String orderJson = objectMapper.writeValueAsString(orderInfo);

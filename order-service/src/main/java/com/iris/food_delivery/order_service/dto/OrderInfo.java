@@ -12,6 +12,7 @@ public class OrderInfo {
     private String customerContactEmail;
     private String customerContactPhone;
     private String restaurantName;
+    private String orderStatus;
     
 	public Long getOrderId() {
 		return orderId;
@@ -66,5 +67,11 @@ public class OrderInfo {
 	}
 	public void setRestaurantName(String restaurantName) {
 		this.restaurantName = restaurantName;
+	}
+	public String getOrderStatus() {
+		return orderStatus;
+	}
+	public void setOrderStatus(String orderStatus) {
+		this.orderStatus = orderStatus;
 	}
 }

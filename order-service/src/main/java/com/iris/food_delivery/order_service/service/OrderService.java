@@ -55,6 +55,7 @@ public class OrderService {
     
 
     public Order saveOrder(Order order) {
+    	order.setOrderStatus("ORDERED");
     	// Ensure order details are correctly associated with the order
         if (order.getOrderDetails() != null) {
         	order.getOrderDetails().forEach(orderDtl -> orderDtl.setOrder(order));
