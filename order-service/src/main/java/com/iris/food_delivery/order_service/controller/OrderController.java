@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.iris.food_delivery.order_service.dto.ApiResponse;
 import com.iris.food_delivery.order_service.entity.Order;
 import com.iris.food_delivery.order_service.service.OrderService;
+import com.iris.food_delivery.order_service.service.SqsService;
 import com.iris.food_delivery.order_service.service.UserService;
 
 @RestController
@@ -26,23 +27,14 @@ import com.iris.food_delivery.order_service.service.UserService;
 @RequestMapping("/order")
 public class OrderController {
 	
-	//@Autowired
-	//private SqsService sqsService;
+	@Autowired
+	private SqsService sqsService;
 	
 	@Autowired
     private OrderService orderService;
 	
 	@Autowired
 	private UserService userService;
-	
-	/*@PostMapping("")
-	public ResponseEntity<String> createOrder() {
-		Random random = new Random();
-        int randomThreeDigitNumber = 100 + random.nextInt(900); // Generates a number from 100 to 999
-        String queueResponse = sqsService.sendMessage("Order Id::"+randomThreeDigitNumber);
-		return ResponseEntity.ok("Order is created successfully. Order Id is " + randomThreeDigitNumber+". Queue Response : "+queueResponse);
-	}
-	*/
 	
 	@GetMapping("/ping")
 	public ResponseEntity<ApiResponse> ping(){
@@ -82,7 +74,7 @@ public class OrderController {
     
     //Get all the orders for the delivery partner
     @GetMapping("/dlvrypartner")
-    @PreAuthorize("hasAuthority('ROLE_DLVRY_PARTNER')")
+    @PreAuthorize("hasAuthority('ROLE_DELIVERY_PARTNER')")
     public ResponseEntity<ApiResponse> getAllOrdersForDeliveryPartner() {
     	List<Order> dlvryPartnerOrders = orderService.getAllOrdersForDeliveryPartner(userService.getLoggedInUser());
         return ResponseEntity.ok(new ApiResponse("SUCCESS", dlvryPartnerOrders));
@@ -106,7 +98,7 @@ public class OrderController {
     
     //Get all the not delivered orders for the delivery partner
     @GetMapping("/dlvrypartner/notdelivered")
-    @PreAuthorize("hasAuthority('ROLE_DLVRY_PARTNER')")
+    @PreAuthorize("hasAuthority('ROLE_DELIVERY_PARTNER')")
     public ResponseEntity<ApiResponse> getNotDeliveredOrdersForDeliveryPartner() {
     	List<Order> dlvryPartnerOrders =  orderService.getNotDeliveredOrdersForDeliveryPartner(userService.getLoggedInUser());
         return ResponseEntity.ok(new ApiResponse("SUCCESS", dlvryPartnerOrders));
@@ -117,6 +109,7 @@ public class OrderController {
     @PreAuthorize("hasAuthority('ROLE_CUSTOMER')")
     public ResponseEntity<ApiResponse> createOrder(@RequestBody Order order) {
         Order createdOrder = orderService.saveOrder(order);
+        sqsService.sendMessage(createdOrder);
         return ResponseEntity.ok(new ApiResponse("SUCCESS", createdOrder));
     }
 
@@ -128,7 +121,7 @@ public class OrderController {
     }
     
     @PutMapping("/{orderId}/updateOrderStatus")
-    @PreAuthorize("hasAnyAuthority('ROLE_RESTAURANT', 'ROLE_DLVRY_PARTNER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_RESTAURANT', 'ROLE_DELIVERY_PARTNER')")
     public ResponseEntity<ApiResponse> updateOrderStatus(
             @PathVariable Long orderId,
             @RequestParam String orderStatus) {
