@@ -3,7 +3,7 @@ package com.iris.food_delivery.delivery_service.service;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.iris.food_delivery.delivery_service.dto.OrderInfo;
+import com.iris.food_delivery.delivery_service.entity.OrderDelivery;
 
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.Message;
@@ -24,8 +24,8 @@ public class SqsListenerService {
         this.sqsClient = sqsClient;
     }
 
-    public List<OrderInfo> receiveMessages() {
-    	List<OrderInfo> orderInfoList = new ArrayList<>();
+    public List<OrderDelivery> receiveMessages() {
+    	List<OrderDelivery> orderDeliveryList = new ArrayList<>();
     	boolean checkMoreMessages = true;
     	while(checkMoreMessages) {
     		ReceiveMessageRequest receiveRequest = ReceiveMessageRequest.builder()
@@ -42,13 +42,11 @@ public class SqsListenerService {
                     
                     try {
                     	 ObjectMapper objectMapper = new ObjectMapper();
-                    	 OrderInfo orderInfo = objectMapper.readValue(message.body(), OrderInfo.class);
-                    	 orderInfoList.add(orderInfo);
+                    	 OrderDelivery orderDelivery = objectMapper.readValue(message.body(), OrderDelivery.class);
+                    	 orderDeliveryList.add(orderDelivery);
                     } catch (Exception e) {
                     }
                     
-                   
-
                     // Delete the message after processing
                     DeleteMessageRequest deleteRequest = DeleteMessageRequest.builder()
                             .queueUrl(QUEUE_URL)
@@ -63,6 +61,6 @@ public class SqsListenerService {
             }
     	}
     	
-    	return orderInfoList;
+    	return orderDeliveryList;
     }
 }

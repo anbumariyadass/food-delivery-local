@@ -14,7 +14,7 @@ public class AwsSqsConfig {
 	private final static String SECRET_KEY = "";
 
     @Bean
-    public SqsClient sqsClient() {
+    SqsClient sqsClient() {
         return SqsClient.builder()
                 .region(Region.AP_SOUTH_1) // Change as per your region
                 .credentialsProvider(StaticCredentialsProvider.create(
