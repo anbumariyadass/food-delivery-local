@@ -7,9 +7,16 @@ const Layout = ({ children }) => {
   return (
     <div className="layout-container">
       <header className="layout-header">
-        <span>Hello, <strong>{user?.username}</strong></span>
-        <LogoutButton />
+        <div className="header-left">
+          <span className="app-title">🍽️ Food Delivery App</span>
+        </div>
+
+        <div className="header-right">
+          <span className="hello-user">Hello, <strong>{user?.username}</strong></span>
+          <LogoutButton />
+        </div>
       </header>
+
 
       <main className="layout-content">
         {children}

@@ -46,6 +46,7 @@ const Signup = () => {
   return (
     <div className="auth-page">
       <div className="auth-box">
+        <h1 className="app-name">🍽️ Food Delivery App</h1>
         <h2>Customer Sign Up</h2>
         <input
           type="text"

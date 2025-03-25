@@ -6,7 +6,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-image: url('../assets/foods-on-plate.jpg'); /* Adjust path as needed */
+  background-image: url('../assets/foods-on-plate.jpg'); 
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -63,3 +63,12 @@
   text-decoration: underline;
   margin-top: 10px;
 }
+
+.app-name {
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #ff5c5c;
+  font-weight: bold;
+}
+
