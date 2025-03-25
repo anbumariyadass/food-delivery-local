@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import '../styles/AuthPage.css';
 
 const Signup = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [retypePassword, setRetypePassword] = useState('');
-  const [userType, setUserType] = useState('');
   const navigate = useNavigate();
 
-  const handleSignup = () => {
-    if (!username || !password || !retypePassword || !userType) {
+  const handleSignup = async () => {
+    if (!username || !password || !retypePassword) {
       alert('All fields are required.');
       return;
     }
@@ -19,59 +20,59 @@ const Signup = () => {
       return;
     }
 
-    localStorage.setItem('user', JSON.stringify({ username, userType }));
+    try {
+      const response = await axios.post('http://localhost:8081/identity/register', {
+        username,
+        password,
+        role: "CUSTOMER",
+        active: "Y",
+      });
 
-    switch (userType) {
-      case 'ADMIN':
-        navigate('/admin');
-        break;
-      case 'CUSTOMER':
-        navigate('/customer');
-        break;
-      case 'RESTAURANT':
-        navigate('/restaurant');
-        break;
-      case 'DELIVERY_PARTNER':
-        navigate('/delivery');
-        break;
-      default:
-        alert('Invalid role');
+      const { message, data } = response.data;
+
+      if (message && data) {
+        alert(message);
+        navigate('/'); // Redirect to Login page
+      } else {
+        alert('Signup successful but invalid response format.');
+      }
+
+    } catch (error) {
+      const errMsg = error.response?.data?.message || error.message;
+      alert(`Signup failed: ${errMsg}`);
     }
   };
 
   return (
-    <div>
-      <h2>Sign Up</h2>
-      <input
-        type="text"
-        placeholder="User Name"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />
-      <br />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <br />
-      <input
-        type="password"
-        placeholder="Retype Password"
-        value={retypePassword}
-        onChange={(e) => setRetypePassword(e.target.value)}
-      />
-      <br />
-      <select value={userType} onChange={(e) => setUserType(e.target.value)}>
-        <option value="">Select Role</option>
-        <option value="ADMIN">ADMIN</option>
-        <option value="CUSTOMER">CUSTOMER</option>
-        <option value="RESTAURANT">RESTAURANT</option>
-        <option value="DELIVERY_PARTNER">DELIVERY_PARTNER</option>
-      </select>
-      <br />
-      <button onClick={handleSignup}>Sign Up</button>
+    <div className="auth-page">
+      <div className="auth-box">
+        <h2>Customer Sign Up</h2>
+        <input
+          type="text"
+          placeholder="User Name"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <br />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <br />
+        <input
+          type="password"
+          placeholder="Retype Password"
+          value={retypePassword}
+          onChange={(e) => setRetypePassword(e.target.value)}
+        />        
+        <br />
+        <button onClick={handleSignup}>Sign Up</button>
+        <button className="link-button" onClick={() => navigate('/')}>
+          Go back to Sign In
+        </button>
+    </div>
     </div>
   );
 };

@@ -1,0 +1,46 @@
+.layout-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+}
+
+.layout-header {
+  background-color: #ff5c5c;
+  color: white;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.layout-header button {
+  background-color: white;
+  color: #ff5c5c;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.layout-header button:hover {
+  background-color: #ffeaea;
+}
+
+.layout-content {
+  flex: 1;
+  padding: 20px;
+}
+
+.layout-footer {
+  text-align: center;
+  background-color: #f1f1f1;
+  padding: 12px;
+  font-size: 14px;
+  color: #555;
+}
