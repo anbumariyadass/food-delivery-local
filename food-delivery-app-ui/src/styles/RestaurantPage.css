@@ -40,3 +40,16 @@
   margin: 6px 0;
 }
 
+.dish-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+.dish-row input {
+  padding: 6px;
+  flex: 1;
+}
+
+

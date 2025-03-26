@@ -14,6 +14,9 @@ const RestaurantPage = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [formData, setFormData] = useState(null); // Will hold editable data
 
+  const [showDishModal, setShowDishModal] = useState(false);
+  const [dishesData, setDishesData] = useState([]);
+
   const tokenHeader = {
     headers: {
       Authorization: `Bearer ${user?.token}`
@@ -55,11 +58,19 @@ const RestaurantPage = () => {
     }
     setShowEditModal(true);
   };
+
+  const openDishModal = () => {
+    if (restaurantInfo?.dishes) {
+      // Clone to avoid direct mutation
+      setDishesData([...restaurantInfo.dishes]);
+      setShowDishModal(true);
+    }
+  };
+  
   
   
   const handleUpdateRestaurant = async () => {
-    try {
-      alert("update")
+    try {      
       await axios.put('http://localhost:8083/restaurant/update', formData, {
         headers: {
           Authorization: `Bearer ${user?.token}`,
@@ -77,6 +88,27 @@ const RestaurantPage = () => {
       alert('Failed to update restaurant info.');
     }
   };
+
+  const handleSaveDishes = async () => {
+    try {
+      const response = await axios.put('http://localhost:8083/restaurant/dishes', dishesData, {
+        headers: {
+          Authorization: `Bearer ${user?.token}`,
+        },
+      });
+  
+      alert(response.data.message);
+      setShowDishModal(false);
+  
+      // Refresh restaurant info
+      const updated = await axios.get('http://localhost:8083/restaurant/myDetail', tokenHeader);
+      setRestaurantInfo(updated.data.data);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update dishes.');
+    }
+  };
+  
   
 
   useEffect(() => {
@@ -113,6 +145,7 @@ const RestaurantPage = () => {
             {restaurantInfo ? (
               <div>
                 <button className="edit-btn" onClick={openEditModal}>Edit Info</button>
+                <button className="edit-btn" onClick={openDishModal}>Manage Dishes</button>
                 <h3>{restaurantInfo.name}</h3>
                 <p><strong>Cuisine:</strong> {restaurantInfo.cuisine}</p>
                 <p><strong>Phone:</strong> {restaurantInfo.phone}</p>
@@ -224,6 +257,59 @@ const RestaurantPage = () => {
           </div>
         </div>
       )}
+
+      {showDishModal && (
+        <div className="modal-overlay">
+          <div className="modal-box large">
+            <h3>Manage Dishes</h3>
+
+            {dishesData.map((dish, index) => (
+              <div key={index} className="dish-row">
+                <input
+                  type="text"
+                  placeholder="Name"
+                  value={dish.name}
+                  onChange={(e) =>
+                    setDishesData(dishesData.map((d, i) => i === index ? { ...d, name: e.target.value } : d))
+                  }
+                />
+                <input
+                  type="text"
+                  placeholder="Description"
+                  value={dish.description}
+                  onChange={(e) =>
+                    setDishesData(dishesData.map((d, i) => i === index ? { ...d, description: e.target.value } : d))
+                  }
+                />
+                <input
+                  type="number"
+                  placeholder="Price"
+                  value={dish.price}
+                  onChange={(e) =>
+                    setDishesData(dishesData.map((d, i) => i === index ? { ...d, price: parseFloat(e.target.value) } : d))
+                  }
+                />
+                <button
+                  className="delete-btn"
+                  onClick={() => setDishesData(dishesData.filter((_, i) => i !== index))}
+                >
+                  ❌
+                </button>
+              </div>
+            ))}
+
+            <button className="add-btn" onClick={() => setDishesData([...dishesData, { name: '', description: '', price: 0 }])}>
+              ➕ Add Dish
+            </button>
+
+            <div className="modal-buttons">
+              <button className="add-btn" onClick={handleSaveDishes}>Save</button>
+              <button className="delete-btn" onClick={() => setShowDishModal(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
 
     </Layout>
