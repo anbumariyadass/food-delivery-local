@@ -8,6 +8,8 @@ const CustomerPage = () => {
   const [activeTab, setActiveTab] = useState('restaurants');
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
+  const [showDishModal, setShowDishModal] = useState(false);
 
   useEffect(() => {
     if (activeTab === 'restaurants') {
@@ -29,6 +31,11 @@ const CustomerPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const openDishModal = (restaurant) => {
+    setSelectedRestaurant(restaurant);
+    setShowDishModal(true);
   };
 
   return (
@@ -57,7 +64,7 @@ const CustomerPage = () => {
                     <p><strong>Address:</strong> {res.address.street}, {res.address.city}</p>
                     <p><strong>Phone:</strong> {res.phone}</p>
                     <p><strong>Avg Price:</strong> ₹{res.averagePricePerPerson}</p>
-                    <button className="add-btn" onClick={() => alert('Dish modal will open')}>Add to Cart</button>
+                    <button className="add-btn" onClick={() => openDishModal(res)}>Add to Cart</button>
                   </div>
                 ))}
               </div>
@@ -68,6 +75,29 @@ const CustomerPage = () => {
         {activeTab !== 'restaurants' && (
           <div>
             <p>Coming soon: {activeTab}</p>
+          </div>
+        )}
+
+        {showDishModal && selectedRestaurant && (
+          <div className="modal-overlay">
+            <div className="modal-box large">
+              <h3>{selectedRestaurant.name} - Dishes</h3>
+              {selectedRestaurant.dishes && selectedRestaurant.dishes.length > 0 ? (
+                <ul className="dish-list">
+                  {selectedRestaurant.dishes.map(dish => (
+                    <li key={dish.id} className="dish-item">
+                      <strong>{dish.name}</strong>: {dish.description} - ₹{dish.price}
+                      <button className="add-btn small">Add</button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No dishes available for this restaurant.</p>
+              )}
+              <div className="modal-buttons">
+                <button className="delete-btn" onClick={() => setShowDishModal(false)}>Close</button>
+              </div>
+            </div>
           </div>
         )}
       </div>
