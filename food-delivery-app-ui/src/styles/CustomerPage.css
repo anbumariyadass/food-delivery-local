@@ -1,0 +1,71 @@
+.customer-tabs {
+  margin: 20px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.customer-tabs button {
+  padding: 8px 16px;
+  border: none;
+  background-color: #ddd;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.customer-tabs button.active,
+.customer-tabs button:hover {
+  background-color: #ff5c5c;
+  color: white;
+}
+
+.customer-content {
+  margin-top: 20px;
+}
+
+.restaurant-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.restaurant-card {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease;
+}
+
+.restaurant-card:hover {
+  transform: translateY(-4px);
+}
+
+.restaurant-card h4 {
+  margin: 0 0 10px;
+  color: #ff5c5c;
+}
+
+.restaurant-card p {
+  margin: 4px 0;
+  font-size: 14px;
+}
+
+.add-btn {
+  margin-top: 10px;
+  background-color: #28a745;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.add-btn:hover {
+  background-color: #218838;
+}
