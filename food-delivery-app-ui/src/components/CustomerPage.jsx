@@ -12,12 +12,19 @@ const CustomerPage = () => {
   const [showDishModal, setShowDishModal] = useState(false);
   const [selectedDishes, setSelectedDishes] = useState([]);
   const [cartRestaurantUserName, setCartRestaurantUserName] = useState(null);
+  const [cart, setCart] = useState(null);
+  const [cartLoading, setCartLoading] = useState(false);
+
+
 
   useEffect(() => {
     if (activeTab === 'restaurants') {
       fetchRestaurants();
+    } else if (activeTab === 'cart') {
+      fetchCart();
     }
   }, [activeTab]);
+
 
   const fetchRestaurants = async () => {
     try {
@@ -34,6 +41,50 @@ const CustomerPage = () => {
       setLoading(false);
     }
   };
+
+  const fetchCart = async () => {
+    try {
+      setCartLoading(true);
+      const response = await axios.get('http://localhost:8085/cart/mycart', {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+      setCart(response.data.data);
+    } catch (error) {
+      console.error('Error fetching cart', error);
+      setCart(null);
+    } finally {
+      setCartLoading(false);
+    }
+  };
+
+  const handleDeleteCartItem = async (itemId) => {
+    const updatedDishes = cart.dishes.filter(d => d.itemId !== itemId);
+    const updatedCart = { ...cart, dishes: updatedDishes };
+  
+    try {
+      const res = await axios.post('http://localhost:8085/cart/save', updatedCart, {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+      alert('Item removed from cart.');
+      fetchCart(); // Refresh
+    } catch (error) {
+      console.error('Delete failed', error);
+      alert('Failed to update cart.');
+    }
+  };
+
+  const handlePlaceOrder = () => {
+    if (!cart || cart.dishes.length === 0) {
+      alert('Cart is empty.');
+      return;
+    }
+  
+    // You will replace this with your actual order API later
+    alert('Order placed successfully!');
+  };
+  
+  
+  
 
   const getDishQty = (dish) => {
     const item = selectedDishes.find(d => d.itemId === String(dish.id));
@@ -156,7 +207,55 @@ const CustomerPage = () => {
           </div>
         )}
 
-        {activeTab !== 'restaurants' && (
+        {activeTab === 'cart' && (
+          <div>
+          <h3>My Cart</h3>
+          {cartLoading ? (
+            <p>Loading cart...</p>
+          ) : cart && cart.dishes && cart.dishes.length > 0 ? (
+            <div>
+              <p><strong>Restaurant:</strong> {cart.restaurantName}</p>
+              <table style={{ width: '100%', marginTop: '15px', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={{ borderBottom: '1px solid #ccc' }}>Item</th>
+                    <th style={{ borderBottom: '1px solid #ccc' }}>Price</th>
+                    <th style={{ borderBottom: '1px solid #ccc' }}>Quantity</th>
+                    <th style={{ borderBottom: '1px solid #ccc' }}>Total</th>
+                    <th style={{ borderBottom: '1px solid #ccc' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cart.dishes.map((dish, index) => (
+                    <tr key={index}>
+                      <td>{dish.itemName}</td>
+                      <td>₹{dish.price}</td>
+                      <td>{dish.quantity}</td>
+                      <td>₹{dish.totalPrice}</td>
+                      <td>
+                        <button
+                          className="delete-btn"
+                          onClick={() => handleDeleteCartItem(dish.itemId)}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+        
+              <div style={{ marginTop: '20px' }}>
+                <button className="add-btn" onClick={handlePlaceOrder}>Place Order</button>
+              </div>
+            </div>
+          ) : (
+            <p>Your cart is empty.</p>
+          )}
+        </div>
+        )}  
+
+        {activeTab !== 'restaurants' && activeTab !== 'cart' && (
           <div>
             <p>Coming soon: {activeTab}</p>
           </div>
