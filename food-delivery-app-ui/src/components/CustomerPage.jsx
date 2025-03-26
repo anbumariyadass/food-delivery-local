@@ -10,6 +10,8 @@ const CustomerPage = () => {
   const [loading, setLoading] = useState(false);
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
   const [showDishModal, setShowDishModal] = useState(false);
+  const [selectedDishes, setSelectedDishes] = useState([]);
+  const [cartRestaurantUserName, setCartRestaurantUserName] = useState(null);
 
   useEffect(() => {
     if (activeTab === 'restaurants') {
@@ -33,10 +35,92 @@ const CustomerPage = () => {
     }
   };
 
-  const openDishModal = (restaurant) => {
-    setSelectedRestaurant(restaurant);
-    setShowDishModal(true);
+  const getDishQty = (dish) => {
+    const item = selectedDishes.find(d => d.itemId === String(dish.id));
+    return item ? item.quantity : 0;
   };
+  
+  const updateDishQty = (dish, delta) => {
+    const itemId = String(dish.id);
+    const existing = selectedDishes.find(d => d.itemId === itemId);
+  
+    if (!existing && delta > 0) {
+      setSelectedDishes([...selectedDishes, {
+        itemId,
+        itemName: dish.name,
+        price: String(dish.price),
+        quantity: 1,
+        totalPrice: String(dish.price),
+      }]);
+    } else if (existing) {
+      const updatedQty = existing.quantity + delta;
+      if (updatedQty <= 0) {
+        setSelectedDishes(selectedDishes.filter(d => d.itemId !== itemId));
+      } else {
+        setSelectedDishes(selectedDishes.map(d =>
+          d.itemId === itemId
+            ? {
+                ...d,
+                quantity: updatedQty,
+                totalPrice: String(updatedQty * parseFloat(d.price)),
+              }
+            : d
+        ));
+      }
+    }
+  };
+  
+
+  const openDishModal = async (restaurant) => {
+    try {
+      const cartRes = await axios.get('http://localhost:8085/cart/mycart', {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+  
+      const cartData = cartRes.data.data;
+      if (
+        cartData
+      ) {
+        alert('Cart is already available. Please order it or remove the cart then try.');
+        return;
+      }
+  
+      setCartRestaurantUserName(cartData?.restaurantUserName || restaurant.userName);
+      setSelectedDishes([]); // Reset dish selection
+      setSelectedRestaurant(restaurant);
+      setShowDishModal(true);
+    } catch (err) {
+      console.error('Error loading cart', err);
+      alert('Failed to validate cart.');
+    }
+  };
+
+  const handleSaveCartAndClose = async () => {
+    if (selectedDishes.length === 0) {
+      alert('No dishes selected.');
+      return;
+    }
+  
+    const cartPayload = {
+      customerUserName: user?.username,
+      restaurantUserName: selectedRestaurant.userName,
+      restaurantName: selectedRestaurant.name,
+      dishes: selectedDishes,
+    };
+  
+    try {
+      const res = await axios.post('http://localhost:8085/cart/save', cartPayload, {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+      alert(res.data.message);
+      setShowDishModal(false);
+    } catch (err) {
+      console.error('Cart save failed', err);
+      alert('Failed to save cart.');
+    }
+  };
+  
+  
 
   return (
     <Layout>
@@ -87,7 +171,11 @@ const CustomerPage = () => {
                   {selectedRestaurant.dishes.map(dish => (
                     <li key={dish.id} className="dish-item">
                       <strong>{dish.name}</strong>: {dish.description} - ₹{dish.price}
-                      <button className="add-btn small">Add</button>
+                      <div className="quantity-controls">
+                        <button onClick={() => updateDishQty(dish, -1)}>-</button>
+                        <span>{getDishQty(dish)}</span>
+                        <button onClick={() => updateDishQty(dish, 1)}>+</button>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -95,7 +183,8 @@ const CustomerPage = () => {
                 <p>No dishes available for this restaurant.</p>
               )}
               <div className="modal-buttons">
-                <button className="delete-btn" onClick={() => setShowDishModal(false)}>Close</button>
+              <button className="add-btn" onClick={handleSaveCartAndClose}>Save</button>
+              <button className="delete-btn" onClick={() => setShowDishModal(false)}>Close</button>
               </div>
             </div>
           </div>

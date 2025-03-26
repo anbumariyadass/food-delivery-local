@@ -69,3 +69,14 @@
 .add-btn:hover {
   background-color: #218838;
 }
+
+.quantity-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+.quantity-controls button {
+  padding: 4px 8px;
+  font-weight: bold;
+}
