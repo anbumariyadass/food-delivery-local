@@ -186,43 +186,96 @@ const CustomerPage = () => {
   
   
   
+  const handleQtyInputChange = (dish, value) => {
+    if (/^\d*$/.test(value)) {
+      const parsedValue = value === '' ? '' : parseInt(value);
+      setSelectedRestaurant((prev) => ({
+        ...prev,
+        dishes: prev.dishes.map(d =>
+          d.id === dish.id ? { ...d, quantity: parsedValue } : d
+        ),
+      }));
+    }
+  };
+
+  const validateDishQty = (dish) => {
+    setSelectedRestaurant((prev) => ({
+      ...prev,
+      dishes: prev.dishes.map(d =>
+        d.id === dish.id
+          ? { ...d, quantity: isNaN(d.quantity) || d.quantity < 0 ? 0 : d.quantity }
+          : d
+      ),
+    }));
+  };
+  
   
   
 
   const getDishQty = (dish) => {
     const item = selectedDishes.find(d => d.itemId === String(dish.id));
-    return item ? item.quantity : 0;
+    return item && !isNaN(item.quantity) ? item.quantity : 0;
   };
   
-  const updateDishQty = (dish, delta) => {
+
+  const updateDishQty = (dish, newQtyOrDelta, isDirect = false) => {
     const itemId = String(dish.id);
     const existing = selectedDishes.find(d => d.itemId === itemId);
   
-    if (!existing && delta > 0) {
-      setSelectedDishes([...selectedDishes, {
-        itemId,
-        itemName: dish.name,
-        price: String(dish.price),
-        quantity: 1,
-        totalPrice: String(dish.price),
-      }]);
-    } else if (existing) {
-      const updatedQty = existing.quantity + delta;
-      if (updatedQty <= 0) {
+    if (isDirect) {
+      const qty = Number(newQtyOrDelta);
+      if (isNaN(qty) || qty < 0) return; // Reject invalid or negative input
+  
+      if (qty === 0) {
         setSelectedDishes(selectedDishes.filter(d => d.itemId !== itemId));
-      } else {
+      } else if (existing) {
         setSelectedDishes(selectedDishes.map(d =>
           d.itemId === itemId
             ? {
                 ...d,
-                quantity: updatedQty,
-                totalPrice: String(updatedQty * parseFloat(d.price)),
+                quantity: qty,
+                totalPrice: String(qty * parseFloat(d.price)),
               }
             : d
         ));
+      } else {
+        setSelectedDishes([...selectedDishes, {
+          itemId,
+          itemName: dish.name,
+          price: String(dish.price),
+          quantity: qty,
+          totalPrice: String(qty * parseFloat(dish.price)),
+        }]);
+      }
+    } else {
+      // Handle + / - buttons
+      if (!existing && newQtyOrDelta > 0) {
+        setSelectedDishes([...selectedDishes, {
+          itemId,
+          itemName: dish.name,
+          price: String(dish.price),
+          quantity: 1,
+          totalPrice: String(dish.price),
+        }]);
+      } else if (existing) {
+        const updatedQty = existing.quantity + newQtyOrDelta;
+        if (updatedQty <= 0) {
+          setSelectedDishes(selectedDishes.filter(d => d.itemId !== itemId));
+        } else {
+          setSelectedDishes(selectedDishes.map(d =>
+            d.itemId === itemId
+              ? {
+                  ...d,
+                  quantity: updatedQty,
+                  totalPrice: String(updatedQty * parseFloat(d.price)),
+                }
+              : d
+          ));
+        }
       }
     }
   };
+  
   
 
   const openDishModal = async (restaurant) => {
@@ -414,7 +467,20 @@ const CustomerPage = () => {
                     <div className="dish-price">₹{dish.price}</div>
                     <div className="quantity-controls">
                       <button onClick={() => updateDishQty(dish, -1)}>-</button>
-                      <span>{getDishQty(dish)}</span>
+                      <input
+                        type="text"
+                        className="quantity-input"
+                        value={getDishQty(dish).toString()}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          // Only allow digits
+                          if (/^\d*$/.test(value)) {
+                            // Remove leading 0s (but keep "0" if it's the only digit)
+                            const clean = value.replace(/^0+(?!$)/, '') || '0';
+                            updateDishQty(dish, clean, true);
+                          }
+                        }}
+                      />
                       <button onClick={() => updateDishQty(dish, 1)}>+</button>
                     </div>
                   </li>
