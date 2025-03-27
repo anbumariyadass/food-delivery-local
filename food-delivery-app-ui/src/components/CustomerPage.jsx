@@ -57,8 +57,29 @@ const CustomerPage = () => {
     }
   };
 
+  const handleClearCart = async () => {
+    try {
+      await axios.delete('http://localhost:8085/cart/mycart', {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+      setCart(null);
+      alert('Cart cleared successfully!');
+    } catch (err) {
+      console.error('Failed to clear cart:', err);
+      alert('Could not clear cart.');
+    }
+  };
+  
+
   const handleDeleteCartItem = async (itemId) => {
     const updatedDishes = cart.dishes.filter(d => d.itemId !== itemId);
+  
+    if (updatedDishes.length === 0) {
+      // No items left – delete entire cart
+      handleClearCart();
+      return;
+    }
+  
     const updatedCart = { ...cart, dishes: updatedDishes };
   
     try {
@@ -66,12 +87,13 @@ const CustomerPage = () => {
         headers: { Authorization: `Bearer ${user?.token}` },
       });
       alert('Item removed from cart.');
-      fetchCart(); // Refresh
+      fetchCart();
     } catch (error) {
       console.error('Delete failed', error);
       alert('Failed to update cart.');
     }
   };
+  
 
   const handlePlaceOrder = () => {
     if (!cart || cart.dishes.length === 0) {
@@ -170,6 +192,22 @@ const CustomerPage = () => {
       alert('Failed to save cart.');
     }
   };
+
+  const handleDeleteCart = async () => {
+    if (!window.confirm('Are you sure you want to delete the entire cart?')) return;
+  
+    try {
+      await axios.delete('http://localhost:8085/cart/mycart', {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+      alert('Cart deleted successfully.');
+      setCart(null);
+    } catch (err) {
+      console.error('Error deleting cart:', err);
+      alert('Failed to delete cart.');
+    }
+  };
+  
   
   
 
@@ -215,38 +253,52 @@ const CustomerPage = () => {
           ) : cart && cart.dishes && cart.dishes.length > 0 ? (
             <div>
               <p><strong>Restaurant:</strong> {cart.restaurantName}</p>
-              <table style={{ width: '100%', marginTop: '15px', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr>
-                    <th style={{ borderBottom: '1px solid #ccc' }}>Item</th>
-                    <th style={{ borderBottom: '1px solid #ccc' }}>Price</th>
-                    <th style={{ borderBottom: '1px solid #ccc' }}>Quantity</th>
-                    <th style={{ borderBottom: '1px solid #ccc' }}>Total</th>
-                    <th style={{ borderBottom: '1px solid #ccc' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cart.dishes.map((dish, index) => (
-                    <tr key={index}>
-                      <td>{dish.itemName}</td>
-                      <td>₹{dish.price}</td>
-                      <td>{dish.quantity}</td>
-                      <td>₹{dish.totalPrice}</td>
-                      <td>
-                        <button
-                          className="delete-btn"
-                          onClick={() => handleDeleteCartItem(dish.itemId)}
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <table className="cart-table">
+  <thead>
+    <tr>
+      <th>Item</th>
+      <th>Price</th>
+      <th>Quantity</th>
+      <th>Total</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {cart.dishes.map((dish, index) => (
+      <tr key={index}>
+        <td>{dish.itemName}</td>
+        <td>₹{dish.price}</td>
+        <td>{dish.quantity}</td>
+        <td>₹{dish.totalPrice}</td>
+        <td>
+          <button
+            className="delete-btn"
+            onClick={() => handleDeleteCartItem(dish.itemId)}
+          >
+            Delete
+          </button>
+        </td>
+      </tr>
+    ))}
+    <tr>
+      <td colSpan="3" style={{ textAlign: 'right', fontWeight: 'bold' }}>Total</td>
+      <td colSpan="2" style={{ fontWeight: 'bold' }}>
+        ₹{cart.dishes.reduce((sum, d) => sum + parseFloat(d.totalPrice), 0)}
+      </td>
+    </tr>
+  </tbody>
+</table>
+
         
               <div style={{ marginTop: '20px' }}>
                 <button className="add-btn" onClick={handlePlaceOrder}>Place Order</button>
+                <button
+                  className="delete-btn"
+                  onClick={handleDeleteCart}
+                  style={{ marginLeft: '10px', backgroundColor: '#dc3545' }}
+                >
+                  🗑 Delete Cart
+                </button>
               </div>
             </div>
           ) : (
@@ -265,17 +317,27 @@ const CustomerPage = () => {
           <div className="modal-overlay">
             <div className="modal-box large">
               <h3>{selectedRestaurant.name} - Dishes</h3>
+              <div className="dish-header">
+                <div className="dish-name">Dish</div>
+                <div className="dish-desc">Description</div>
+                <div className="dish-price">Price</div>
+                <div className="quantity-controls">Added Count</div>
+              </div>
+
               {selectedRestaurant.dishes && selectedRestaurant.dishes.length > 0 ? (
                 <ul className="dish-list">
                   {selectedRestaurant.dishes.map(dish => (
                     <li key={dish.id} className="dish-item">
-                      <strong>{dish.name}</strong>: {dish.description} - ₹{dish.price}
-                      <div className="quantity-controls">
-                        <button onClick={() => updateDishQty(dish, -1)}>-</button>
-                        <span>{getDishQty(dish)}</span>
-                        <button onClick={() => updateDishQty(dish, 1)}>+</button>
-                      </div>
-                    </li>
+                    <div className="dish-name">{dish.name}</div>
+                    <div className="dish-desc">{dish.description}</div>
+                    <div className="dish-price">₹{dish.price}</div>
+                    <div className="quantity-controls">
+                      <button onClick={() => updateDishQty(dish, -1)}>-</button>
+                      <span>{getDishQty(dish)}</span>
+                      <button onClick={() => updateDishQty(dish, 1)}>+</button>
+                    </div>
+                  </li>
+                  
                   ))}
                 </ul>
               ) : (
