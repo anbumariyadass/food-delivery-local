@@ -388,3 +388,34 @@ button {
   margin-top: 5px;
 }
 
+.toggle-btn {
+  background-color: #007bff;
+  color: white;
+  padding: 5px 10px;
+  border: none;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.toggle-btn:hover {
+  background-color: #0056b3;
+}
+
+.order-summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+
+.order-summary-table th,
+.order-summary-table td {
+  border: 1px solid #ccc;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.order-summary-table th {
+  background-color: #f2f2f2;
+}
+

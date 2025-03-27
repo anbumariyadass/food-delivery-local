@@ -19,6 +19,7 @@ const CustomerPage = () => {
   const [trackingData, setTrackingData] = useState([]);
   const [showTrackingModal, setShowTrackingModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [expandedOrders, setExpandedOrders] = useState([]);
 
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [deliveryPartners, setDeliveryPartners] = useState([]);
@@ -111,6 +112,15 @@ const CustomerPage = () => {
       console.error("Failed to fetch profile:", error);
     }
   };
+
+  const toggleOrderDetails = (orderId) => {
+    setExpandedOrders(prev =>
+      prev.includes(orderId)
+        ? prev.filter(id => id !== orderId) // collapse
+        : [...prev, orderId]                // expand
+    );
+  };
+  
   
 
   const handleTrackOrder = async (orderId) => {
@@ -587,35 +597,64 @@ const CustomerPage = () => {
                 .map(order => (
                   <div key={order.orderId} className="order-card">
                     <div className="order-header">
-                    <h4>Order #{order.orderId} - {order.orderStatus}</h4>
-                    <button className="track-btn" onClick={() => handleTrackOrder(order.orderId)}>Track</button>
-                  </div>
-                    <p><strong>Restaurant:</strong> {order.restaurantName}</p>
-                    <p><strong>Delivery Partner:</strong> {order.dlvryPartnerName}</p>
-                    <p><strong>Total:</strong> ₹{order.totalPrice}</p>
-                    <p><strong>Ordered On:</strong> {new Date(order.orderedOn).toLocaleString()}</p>
-                    
-                    <h5>Order Details:</h5>
-                    <table className="order-table">
+                      <h4>Order #{order.orderId} - {order.orderStatus}</h4>
+                      <div>
+                        <button className="track-btn" onClick={() => handleTrackOrder(order.orderId)}>Track</button>
+                        <button
+                          className="toggle-btn"
+                          onClick={() => toggleOrderDetails(order.orderId)}
+                          style={{ marginLeft: '10px' }}
+                        >
+                          {expandedOrders.includes(order.orderId) ? 'Hide Details' : 'Show Details'}
+                        </button>
+                      </div>
+                    </div>
+
+                    <table className="order-summary-table">
                       <thead>
                         <tr>
-                          <th>Item</th>
-                          <th>Qty</th>
-                          <th>Price</th>
+                          <th>Restaurant</th>
+                          <th>Delivery Partner</th>
                           <th>Total</th>
+                          <th>Ordered On</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {order.orderDetails.map(detail => (
-                          <tr key={detail.orderDtlId}>
-                            <td>{detail.itemName}</td>
-                            <td>{detail.quantity}</td>
-                            <td>₹{detail.price}</td>
-                            <td>₹{detail.totalPrice}</td>
-                          </tr>
-                        ))}
+                        <tr>
+                          <td>{order.restaurantName}</td>
+                          <td>{order.dlvryPartnerName}</td>
+                          <td>₹{order.totalPrice}</td>
+                          <td>{new Date(order.orderedOn).toLocaleString()}</td>
+                        </tr>
                       </tbody>
-                    </table>
+                  </table>
+
+
+                    {expandedOrders.includes(order.orderId) && (
+                      <>
+                        <h5>Order Details:</h5>
+                        <table className="order-table">
+                          <thead>
+                            <tr>
+                              <th>Item</th>
+                              <th>Qty</th>
+                              <th>Price</th>
+                              <th>Total</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {order.orderDetails.map(detail => (
+                              <tr key={detail.orderDtlId}>
+                                <td>{detail.itemName}</td>
+                                <td>{detail.quantity}</td>
+                                <td>₹{detail.price}</td>
+                                <td>₹{detail.totalPrice}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </>
+                    )}
                   </div>
                 ))
             )}
