@@ -342,6 +342,43 @@ const CustomerPage = () => {
     }
   };
   
+  const handleQuantityChange = (itemId, value) => {
+    const qty = parseInt(value, 10);
+  
+    // Block non-numeric, empty, or 0 values
+    if (isNaN(qty) || qty < 1) return;
+  
+    const updatedDishes = cart.dishes.map(dish =>
+      dish.itemId === itemId
+        ? {
+            ...dish,
+            quantity: qty,
+            totalPrice: String(qty * parseFloat(dish.price)),
+          }
+        : dish
+    );
+  
+    const updatedCart = {
+      ...cart,
+      dishes: updatedDishes,
+    };
+  
+    setCart(updatedCart);
+  };
+  
+  const resetToSavedCart = async () => {
+    try {
+      const response = await axios.get('http://localhost:8085/cart/mycart', {
+        headers: {
+          Authorization: `Bearer ${user?.token}`
+        }
+      });
+      setCart(response.data.data); // Update state with saved cart
+    } catch (error) {
+      console.error('Failed to reset cart:', error);
+      alert('Unable to fetch saved cart.');
+    }
+  };
   
   
 
@@ -402,7 +439,15 @@ const CustomerPage = () => {
                   <tr key={index}>
                     <td>{dish.itemName}</td>
                     <td>₹{dish.price}</td>
-                    <td>{dish.quantity}</td>
+                    <td>
+                      <input
+                        type="number"
+                        min="1"
+                        value={dish.quantity}
+                        onChange={(e) => handleQuantityChange(dish.itemId, e.target.value)}
+                        className="quantity-input"
+                      />
+                    </td>
                     <td>₹{dish.totalPrice}</td>
                     <td>
                       <button
@@ -432,6 +477,8 @@ const CustomerPage = () => {
                   style={{ marginLeft: '10px', backgroundColor: '#dc3545' }}
                 >
                   🗑 Delete Cart
+                </button>
+                <button className="reset-btn" onClick={resetToSavedCart}>Reset                 
                 </button>
               </div>
             </div>

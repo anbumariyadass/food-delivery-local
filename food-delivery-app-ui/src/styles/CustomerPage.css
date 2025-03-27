@@ -228,3 +228,20 @@
 }
 
 
+.reset-btn {
+  margin-top: 10px;
+  background-color: #ffc107; /* Bootstrap warning yellow */
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.reset-btn:hover {
+  background-color: #e0a800;
+}
+
+button {
+  margin-right: 10px;
+}
