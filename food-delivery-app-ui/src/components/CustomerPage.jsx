@@ -14,6 +14,7 @@ const CustomerPage = () => {
   const [cartRestaurantUserName, setCartRestaurantUserName] = useState(null);
   const [cart, setCart] = useState(null);
   const [cartLoading, setCartLoading] = useState(false);
+  const [orders, setOrders] = useState([]);
 
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [deliveryPartners, setDeliveryPartners] = useState([]);
@@ -33,6 +34,8 @@ const CustomerPage = () => {
       fetchRestaurants();
     } else if (activeTab === 'cart') {
       fetchCart();
+    } else if (activeTab === 'orders') {
+      fetchOrders();
     }
   }, [activeTab]);
 
@@ -65,6 +68,19 @@ const CustomerPage = () => {
       setCart(null);
     } finally {
       setCartLoading(false);
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      const response = await axios.get('http://localhost:8086/order/customer', {
+        headers: {
+          Authorization: `Bearer ${user?.token}`
+        }
+      });
+      setOrders(response.data.data);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
     }
   };
 
@@ -488,7 +504,48 @@ const CustomerPage = () => {
         </div>
         )}  
 
-        {activeTab !== 'restaurants' && activeTab !== 'cart' && (
+        {activeTab === 'orders' && (
+          <div>
+            <h3>My Orders</h3>
+            {orders.length === 0 ? (
+              <p>No orders found.</p>
+            ) : (
+              orders.map((order) => (
+                <div key={order.orderId} className="order-card">
+                  <h4>Order #{order.orderId} - {order.orderStatus}</h4>
+                  <p><strong>Restaurant:</strong> {order.restaurantName}</p>
+                  <p><strong>Delivery Partner:</strong> {order.dlvryPartnerName}</p>
+                  <p><strong>Total:</strong> ₹{order.totalPrice}</p>
+                  <p><strong>Ordered On:</strong> {new Date(order.orderedOn).toLocaleString()}</p>
+                  <h5>Order Details:</h5>
+                  <table className="order-table">
+                    <thead>
+                      <tr>
+                        <th>Item</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {order.orderDetails.map(detail => (
+                        <tr key={detail.orderDtlId}>
+                          <td>{detail.itemName}</td>
+                          <td>{detail.quantity}</td>
+                          <td>₹{detail.price}</td>
+                          <td>₹{detail.totalPrice}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+
+        {activeTab !== 'restaurants' && activeTab !== 'cart' && activeTab !== 'orders' && (
           <div>
             <p>Coming soon: {activeTab}</p>
           </div>
@@ -498,20 +555,20 @@ const CustomerPage = () => {
           <div className="modal-overlay">
             <div className="modal-box large">
               <h3>{selectedRestaurant.name} - Dishes</h3>
-              <div className="dish-header">
-                <div className="dish-name">Dish</div>
-                <div className="dish-desc">Description</div>
-                <div className="dish-price">Price</div>
-                <div className="quantity-controls">Added Count</div>
+              <div className="dish-grid header">
+                <div>Dish</div>
+                <div>Description</div>
+                <div>Price</div>
+                <div>Cart#</div>
               </div>
 
               {selectedRestaurant.dishes && selectedRestaurant.dishes.length > 0 ? (
                 <ul className="dish-list">
-                  {selectedRestaurant.dishes.map(dish => (
-                    <li key={dish.id} className="dish-item">
-                    <div className="dish-name">{dish.name}</div>
-                    <div className="dish-desc">{dish.description}</div>
-                    <div className="dish-price">₹{dish.price}</div>
+                {selectedRestaurant.dishes.map(dish => (
+                  <li key={dish.id} className="dish-grid">
+                    <div><strong>{dish.name}</strong></div>
+                    <div>{dish.description}</div>
+                    <div>₹{dish.price}</div>
                     <div className="quantity-controls">
                       <button onClick={() => updateDishQty(dish, -1)}>-</button>
                       <input
@@ -520,9 +577,7 @@ const CustomerPage = () => {
                         value={getDishQty(dish).toString()}
                         onChange={(e) => {
                           const value = e.target.value;
-                          // Only allow digits
                           if (/^\d*$/.test(value)) {
-                            // Remove leading 0s (but keep "0" if it's the only digit)
                             const clean = value.replace(/^0+(?!$)/, '') || '0';
                             updateDishQty(dish, clean, true);
                           }
@@ -531,9 +586,8 @@ const CustomerPage = () => {
                       <button onClick={() => updateDishQty(dish, 1)}>+</button>
                     </div>
                   </li>
-                  
-                  ))}
-                </ul>
+                ))}
+              </ul>
               ) : (
                 <p>No dishes available for this restaurant.</p>
               )}
