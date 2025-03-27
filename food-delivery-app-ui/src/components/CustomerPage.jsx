@@ -15,6 +15,10 @@ const CustomerPage = () => {
   const [cart, setCart] = useState(null);
   const [cartLoading, setCartLoading] = useState(false);
   const [orders, setOrders] = useState([]);
+  const [orderStatusFilter, setOrderStatusFilter] = useState("ALL");
+  const [trackingData, setTrackingData] = useState([]);
+  const [showTrackingModal, setShowTrackingModal] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
 
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [deliveryPartners, setDeliveryPartners] = useState([]);
@@ -84,6 +88,23 @@ const CustomerPage = () => {
     }
   };
 
+  const handleTrackOrder = async (orderId) => {
+    try {
+      const response = await axios.get(`http://localhost:8087/delivery/${orderId}/trackOrder`, {
+        headers: {
+          Authorization: `Bearer ${user?.token}`,
+        },
+      });
+      setSelectedOrderId(orderId);
+      setTrackingData(response.data.data);
+      setShowTrackingModal(true);
+    } catch (error) {
+      console.error("Tracking failed", error);
+      alert("Failed to get tracking info.");
+    }
+  };
+  
+
   const handleClearCart = async () => {
     try {
       await axios.delete('http://localhost:8085/cart/mycart', {
@@ -96,6 +117,8 @@ const CustomerPage = () => {
       alert('Could not clear cart.');
     }
   };
+
+
   
 
   const handleDeleteCartItem = async (itemId) => {
@@ -404,8 +427,6 @@ const CustomerPage = () => {
         <button onClick={() => setActiveTab('restaurants')} className={activeTab === 'restaurants' ? 'active' : ''}>Restaurants</button>
         <button onClick={() => setActiveTab('cart')}>My Cart</button>
         <button onClick={() => setActiveTab('orders')}>My Orders</button>
-        <button onClick={() => setActiveTab('notdelivered')}>Not Delivered</button>
-        <button onClick={() => setActiveTab('track')}>Track Order</button>
         <button onClick={() => setActiveTab('profile')}>My Profile</button>
       </div>
 
@@ -507,42 +528,63 @@ const CustomerPage = () => {
         {activeTab === 'orders' && (
           <div>
             <h3>My Orders</h3>
+
+            {/* Order Status Filter */}
+            <div style={{ marginBottom: '10px' }}>
+              <label>Status Filter: </label>
+              <select value={orderStatusFilter} onChange={(e) => setOrderStatusFilter(e.target.value)}>
+                <option value="ALL">All</option>
+                <option value="ORDERED">Ordered</option>
+                <option value="DELIVERED">Delivered</option>
+                <option value="INTRANSIT">In Transit</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="CLOSED">Closed</option>
+              </select>
+            </div>
+
             {orders.length === 0 ? (
               <p>No orders found.</p>
             ) : (
-              orders.map((order) => (
-                <div key={order.orderId} className="order-card">
-                  <h4>Order #{order.orderId} - {order.orderStatus}</h4>
-                  <p><strong>Restaurant:</strong> {order.restaurantName}</p>
-                  <p><strong>Delivery Partner:</strong> {order.dlvryPartnerName}</p>
-                  <p><strong>Total:</strong> ₹{order.totalPrice}</p>
-                  <p><strong>Ordered On:</strong> {new Date(order.orderedOn).toLocaleString()}</p>
-                  <h5>Order Details:</h5>
-                  <table className="order-table">
-                    <thead>
-                      <tr>
-                        <th>Item</th>
-                        <th>Qty</th>
-                        <th>Price</th>
-                        <th>Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {order.orderDetails.map(detail => (
-                        <tr key={detail.orderDtlId}>
-                          <td>{detail.itemName}</td>
-                          <td>{detail.quantity}</td>
-                          <td>₹{detail.price}</td>
-                          <td>₹{detail.totalPrice}</td>
+              orders
+                .filter(order => orderStatusFilter === 'ALL' || order.orderStatus === orderStatusFilter)
+                .map(order => (
+                  <div key={order.orderId} className="order-card">
+                    <div className="order-header">
+                    <h4>Order #{order.orderId} - {order.orderStatus}</h4>
+                    <button className="track-btn" onClick={() => handleTrackOrder(order.orderId)}>Track</button>
+                  </div>
+                    <p><strong>Restaurant:</strong> {order.restaurantName}</p>
+                    <p><strong>Delivery Partner:</strong> {order.dlvryPartnerName}</p>
+                    <p><strong>Total:</strong> ₹{order.totalPrice}</p>
+                    <p><strong>Ordered On:</strong> {new Date(order.orderedOn).toLocaleString()}</p>
+                    
+                    <h5>Order Details:</h5>
+                    <table className="order-table">
+                      <thead>
+                        <tr>
+                          <th>Item</th>
+                          <th>Qty</th>
+                          <th>Price</th>
+                          <th>Total</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ))
+                      </thead>
+                      <tbody>
+                        {order.orderDetails.map(detail => (
+                          <tr key={detail.orderDtlId}>
+                            <td>{detail.itemName}</td>
+                            <td>{detail.quantity}</td>
+                            <td>₹{detail.price}</td>
+                            <td>₹{detail.totalPrice}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ))
             )}
           </div>
         )}
+
 
 
         {activeTab !== 'restaurants' && activeTab !== 'cart' && activeTab !== 'orders' && (
@@ -652,7 +694,32 @@ const CustomerPage = () => {
           </div>
         )}
 
-
+        {showTrackingModal && (
+          <div className="modal-overlay">
+            <div className="modal-box large">
+              <h3>Tracking Info - Order #{selectedOrderId}</h3>
+              <table className="order-table">
+                <thead>
+                  <tr>
+                    <th>Status</th><th>Updated On</th><th>Updated By</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {trackingData.map(step => (
+                    <tr key={step.trackerId}>
+                      <td>{step.orderStatus}</td>
+                      <td>{step.orderStatusOn}</td>
+                      <td>{step.orderStatusUpdatedBy}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="modal-buttons">
+                <button className="delete-btn" onClick={() => setShowTrackingModal(false)}>Close</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );
