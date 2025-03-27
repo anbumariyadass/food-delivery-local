@@ -15,6 +15,17 @@ const CustomerPage = () => {
   const [cart, setCart] = useState(null);
   const [cartLoading, setCartLoading] = useState(false);
 
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [deliveryPartners, setDeliveryPartners] = useState([]);
+  const [contactInfo, setContactInfo] = useState({
+    contactName: '',
+    contactAddress: '',
+    contactEmail: '',
+    contactPhone: '',
+  });
+  const [selectedPartner, setSelectedPartner] = useState('');
+
+
 
 
   useEffect(() => {
@@ -101,9 +112,79 @@ const CustomerPage = () => {
       return;
     }
   
-    // You will replace this with your actual order API later
-    alert('Order placed successfully!');
+    handlePlaceOrderModalOpen(); // Fetch delivery partners + customer info and show modal
   };
+
+  const handlePlaceOrderModalOpen = async () => {
+    setShowOrderModal(true);
+  
+    try {
+      const partnerRes = await axios.get('http://localhost:8087/delivery/getAllDeliveryPartners', {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+      setDeliveryPartners(partnerRes.data.data);
+  
+      const userRes = await axios.get('http://localhost:8084/customer/get', {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+      const info = userRes.data.data;
+      setContactInfo({
+        contactName: info.customerName,
+        contactAddress: info.address,
+        contactEmail: info.email,
+        contactPhone: info.phone,
+      });
+    } catch (err) {
+      console.error('Failed to fetch info', err);
+    }
+  };
+
+  const handleSubmitOrder = async () => {
+    if (!selectedPartner || !contactInfo.contactName || !contactInfo.contactAddress || !contactInfo.contactPhone) {
+      alert('Please fill all mandatory fields.');
+      return;
+    }
+  
+    const selected = deliveryPartners.find(p => p.userName === selectedPartner);
+  
+    const orderPayload = {
+      restaurantUserName: cart.restaurantUserName,
+      restaurantName: cart.restaurantName,
+      dlvryPartnerUserName: selected.userName,
+      dlvryPartnerName: selected.deliveryPartnerName,
+      orderStatus: "Pending",
+      totalPrice: cart.dishes.reduce((sum, d) => sum + parseFloat(d.totalPrice), 0),
+      contactName: contactInfo.contactName,
+      contactAddress: contactInfo.contactAddress,
+      contactEmail: contactInfo.contactEmail,
+      contactPhone: contactInfo.contactPhone,
+      orderDetails: cart.dishes.map(d => ({
+        itemName: d.itemName,
+        quantity: d.quantity,
+        price: parseFloat(d.price),
+        totalPrice: parseFloat(d.totalPrice),
+      })),
+    };
+  
+    try {
+      const res = await axios.post('http://localhost:8086/order/create', orderPayload, {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+
+      // Clear the cart via DELETE API
+      await axios.delete('http://localhost:8085/cart/mycart', {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+      alert(`Order placed successfully! Order ID: ${res.data.data.orderId}`);
+      setShowOrderModal(false);
+      setCart(null);
+    } catch (err) {
+      console.error('Order creation failed:', err);
+      alert('Order placement failed.');
+    }
+  };
+  
+  
   
   
   
@@ -254,40 +335,40 @@ const CustomerPage = () => {
             <div>
               <p><strong>Restaurant:</strong> {cart.restaurantName}</p>
               <table className="cart-table">
-  <thead>
-    <tr>
-      <th>Item</th>
-      <th>Price</th>
-      <th>Quantity</th>
-      <th>Total</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {cart.dishes.map((dish, index) => (
-      <tr key={index}>
-        <td>{dish.itemName}</td>
-        <td>₹{dish.price}</td>
-        <td>{dish.quantity}</td>
-        <td>₹{dish.totalPrice}</td>
-        <td>
-          <button
-            className="delete-btn"
-            onClick={() => handleDeleteCartItem(dish.itemId)}
-          >
-            Delete
-          </button>
-        </td>
-      </tr>
-    ))}
-    <tr>
-      <td colSpan="3" style={{ textAlign: 'right', fontWeight: 'bold' }}>Total</td>
-      <td colSpan="2" style={{ fontWeight: 'bold' }}>
-        ₹{cart.dishes.reduce((sum, d) => sum + parseFloat(d.totalPrice), 0)}
-      </td>
-    </tr>
-  </tbody>
-</table>
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Price</th>
+                  <th>Quantity</th>
+                  <th>Total</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cart.dishes.map((dish, index) => (
+                  <tr key={index}>
+                    <td>{dish.itemName}</td>
+                    <td>₹{dish.price}</td>
+                    <td>{dish.quantity}</td>
+                    <td>₹{dish.totalPrice}</td>
+                    <td>
+                      <button
+                        className="delete-btn"
+                        onClick={() => handleDeleteCartItem(dish.itemId)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                <tr>
+                  <td colSpan="3" style={{ textAlign: 'right', fontWeight: 'bold' }}>Grand Total</td>
+                  <td colSpan="2" style={{ fontWeight: 'bold' }}>
+                    ₹{cart.dishes.reduce((sum, d) => sum + parseFloat(d.totalPrice), 0)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
 
         
               <div style={{ marginTop: '20px' }}>
@@ -350,6 +431,61 @@ const CustomerPage = () => {
             </div>
           </div>
         )}
+
+        {showOrderModal && (
+          <div className="modal-overlay">
+            <div className="modal-box large">
+              <h3>Place Your Order</h3>
+              <h4>Restaurant: {cart.restaurantName}</h4>
+              <label>Delivery Partner (Required)</label>
+              <select value={selectedPartner} onChange={e => setSelectedPartner(e.target.value)} required>
+                <option value="">-- Select Delivery Partner --</option>
+                {deliveryPartners.map(partner => (
+                  <option key={partner.userName} value={partner.userName}>
+                    {partner.deliveryPartnerName}
+                  </option>
+                ))}
+              </select>
+
+              <h4>Contact Info</h4>
+              <input placeholder="Contact Name" value={contactInfo.contactName} onChange={e => setContactInfo({ ...contactInfo, contactName: e.target.value })} />
+              <input placeholder="Contact Address" value={contactInfo.contactAddress} onChange={e => setContactInfo({ ...contactInfo, contactAddress: e.target.value })} />
+              <input placeholder="Contact Email (optional)" value={contactInfo.contactEmail} onChange={e => setContactInfo({ ...contactInfo, contactEmail: e.target.value })} />
+              <input placeholder="Contact Phone" value={contactInfo.contactPhone} onChange={e => setContactInfo({ ...contactInfo, contactPhone: e.target.value })} />
+
+              <h4>Cart Summary</h4>
+              <div className="cart-summary">
+                <div className="cart-summary-header">
+                  <div>Item</div>
+                  <div>Qty</div>
+                  <div>Price</div>
+                  <div>Total</div>
+                </div>
+                {cart.dishes.map((dish, idx) => (
+                  <div className="cart-summary-row" key={idx}>
+                    <div>{dish.itemName}</div>
+                    <div>{dish.quantity}</div>
+                    <div>₹{dish.price}</div>
+                    <div>₹{dish.totalPrice}</div>
+                  </div>
+                ))}
+                <div className="cart-summary-total">
+                  <strong>Grand Total:</strong> ₹{cart.dishes.reduce((sum, d) => sum + parseFloat(d.totalPrice), 0)}
+                </div>
+              </div>
+
+
+              <p><strong>Total: ₹{cart.dishes.reduce((sum, d) => sum + parseFloat(d.totalPrice), 0)}</strong></p>
+
+              <div className="modal-buttons">
+                <button className="add-btn" onClick={handleSubmitOrder}>Place Order</button>
+                <button className="delete-btn" onClick={() => setShowOrderModal(false)}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+
       </div>
     </Layout>
   );
