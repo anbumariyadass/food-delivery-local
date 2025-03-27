@@ -371,3 +371,20 @@ button {
 .modal-buttons .delete-btn:hover {
   background-color: #c0392b;
 }
+
+.profile-container {
+  max-width: 600px;
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+}
+

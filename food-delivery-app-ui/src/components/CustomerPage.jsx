@@ -30,6 +30,15 @@ const CustomerPage = () => {
   });
   const [selectedPartner, setSelectedPartner] = useState('');
 
+  const [profile, setProfile] = useState({
+    customerName: '',
+    dob: '',
+    address: '',
+    email: '',
+    phone: '',
+    gender: ''
+  });
+  
 
 
 
@@ -40,7 +49,9 @@ const CustomerPage = () => {
       fetchCart();
     } else if (activeTab === 'orders') {
       fetchOrders();
-    }
+    } else if (activeTab === 'profile') {
+      fetchCustomerProfile();
+    } 
   }, [activeTab]);
 
 
@@ -87,6 +98,20 @@ const CustomerPage = () => {
       console.error("Error fetching orders:", error);
     }
   };
+
+  const fetchCustomerProfile = async () => {
+    try {
+      const response = await axios.get('http://localhost:8084/customer/get', {
+        headers: { Authorization: `Bearer ${user?.token}` }
+      });
+      if (response.data && response.data.data) {
+        setProfile(response.data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch profile:", error);
+    }
+  };
+  
 
   const handleTrackOrder = async (orderId) => {
     try {
@@ -418,6 +443,18 @@ const CustomerPage = () => {
       alert('Unable to fetch saved cart.');
     }
   };
+
+  const handleProfileUpdate = async () => {
+    try {
+      await axios.post('http://localhost:8084/customer/save', profile, {
+        headers: { Authorization: `Bearer ${user?.token}` }
+      });
+      alert("Profile updated successfully!");
+    } catch (error) {
+      alert("Failed to update profile");
+    }
+  };
+  
   
   
 
@@ -585,11 +622,37 @@ const CustomerPage = () => {
           </div>
         )}
 
-
-
-        {activeTab !== 'restaurants' && activeTab !== 'cart' && activeTab !== 'orders' && (
-          <div>
-            <p>Coming soon: {activeTab}</p>
+        {activeTab === 'profile' && (
+          <div className="profile-container">
+            <h3>My Profile</h3>
+            <div className="form-group">
+              <label>Name</label>
+              <input type="text" value={profile.customerName} onChange={(e) => setProfile({...profile, customerName: e.target.value})} />
+            </div>
+            <div className="form-group">
+              <label>Date of Birth</label>
+              <input type="date" value={profile.dob} onChange={(e) => setProfile({...profile, dob: e.target.value})} />
+            </div>
+            <div className="form-group">
+              <label>Address</label>
+              <input type="text" value={profile.address} onChange={(e) => setProfile({...profile, address: e.target.value})} />
+            </div>
+            <div className="form-group">
+              <label>Email</label>
+              <input type="email" value={profile.email} onChange={(e) => setProfile({...profile, email: e.target.value})} />
+            </div>
+            <div className="form-group">
+              <label>Phone</label>
+              <input type="text" value={profile.phone} onChange={(e) => setProfile({...profile, phone: e.target.value})} />
+            </div>
+            <div className="form-group">
+              <label>Gender</label>
+              <select value={profile.gender} onChange={(e) => setProfile({...profile, gender: e.target.value})}>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </div>
+            <button className="add-btn" onClick={handleProfileUpdate}>Update Profile</button>
           </div>
         )}
 
