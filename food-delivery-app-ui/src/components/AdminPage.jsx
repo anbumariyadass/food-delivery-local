@@ -15,6 +15,8 @@ const AdminPage = () => {
   const [customers, setCustomers] = useState([]);
   const [subscriberEmail, setSubscriberEmail] = useState('');
   const [error, setError] = useState('');
+  const [selectedRole, setSelectedRole] = useState('ALL');
+
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [newUser, setNewUser] = useState({ username: '', password: '', role: 'RESTAURANT' });
@@ -211,6 +213,17 @@ const AdminPage = () => {
               </button>
             </div>
 
+            <div style={{ marginBottom: '10px' }}>
+              <label style={{ marginRight: '8px' }}>Filter by Role:</label>
+              <select value={selectedRole} onChange={(e) => setSelectedRole(e.target.value)}>
+                <option value="ALL">All</option>
+                <option value="ADMIN">ADMIN</option>
+                <option value="RESTAURANT">RESTAURANT</option>
+                <option value="DELIVERY_PARTNER">DELIVERY_PARTNER</option>
+                <option value="CUSTOMER">CUSTOMER</option>
+              </select>
+            </div>
+
             <table className="user-table">
               <thead>
                 <tr>
@@ -221,7 +234,9 @@ const AdminPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {users.map((u, idx) => (
+              {users
+                .filter((u) => selectedRole === 'ALL' || u.role === selectedRole)
+                .map((u, idx) => (
                   <tr key={idx}>
                     <td>{u.username}</td>
                     <td>{u.role}</td>

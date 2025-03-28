@@ -5,7 +5,7 @@ import '../styles/RestaurantPage.css';
 
 const DeliveryPartnerPage = () => {
   const user = JSON.parse(localStorage.getItem('user'));
-  const [activeTab, setActiveTab] = useState('info');
+  const [activeTab, setActiveTab] = useState('orders');
   const [info, setInfo] = useState(null);
   const [formData, setFormData] = useState({
     deliveryPartnerName: '',
@@ -144,10 +144,10 @@ const DeliveryPartnerPage = () => {
 
   return (
     <Layout>
-      <div className="restaurant-tabs">
-        <button onClick={() => setActiveTab('info')} className={activeTab === 'info' ? 'active' : ''}>My Info</button>
+      <div className="restaurant-tabs">        
         <button onClick={() => setActiveTab('orders')} className={activeTab === 'orders' ? 'active' : ''}>All Orders</button>
         <button onClick={() => setActiveTab('personals')} className={activeTab === 'personals' ? 'active' : ''}>Manage Delivery Personals</button>
+        <button onClick={() => setActiveTab('info')} className={activeTab === 'info' ? 'active' : ''}>My Info</button>
       </div>
 
       <div className="restaurant-content">
