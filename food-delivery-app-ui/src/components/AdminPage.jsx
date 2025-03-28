@@ -12,6 +12,7 @@ const AdminPage = () => {
   const [users, setUsers] = useState([]);
   const [deliveryPartners, setDeliveryPartners] = useState([]);
   const [notification, setNotification] = useState({ subject: '', content: '' });
+  const [customers, setCustomers] = useState([]);
   const [subscriberEmail, setSubscriberEmail] = useState('');
   const [error, setError] = useState('');
 
@@ -57,6 +58,20 @@ const AdminPage = () => {
       setError('Failed to load delivery partners.');
     }
   };
+
+  const fetchCustomers = async () => {
+    try {
+      const response = await axios.get('http://localhost:8084/customer/getAll', {
+        headers: {
+          Authorization: `Bearer ${user?.token}`,
+        },
+      });
+      setCustomers(response.data.data);
+    } catch (err) {
+      setError('Failed to load customers.');
+    }
+  };
+  
 
   const handleSendNotification = async () => {
     if (!notification.subject || !notification.content) {
@@ -171,6 +186,7 @@ const AdminPage = () => {
     if (activeTab === 'restaurants') fetchRestaurants();
     if (activeTab === 'users') fetchUsers();
     if (activeTab === 'delivery') fetchDeliveryPartners();
+    if (activeTab === 'customers') fetchCustomers();
   }, [activeTab]);
 
   return (
@@ -180,6 +196,7 @@ const AdminPage = () => {
           <button onClick={() => setActiveTab('users')} className={activeTab === 'users' ? 'active' : ''}>Users</button>
           <button onClick={() => setActiveTab('restaurants')} className={activeTab === 'restaurants' ? 'active' : ''}>Restaurants</button>
           <button onClick={() => setActiveTab('delivery')} className={activeTab === 'delivery' ? 'active' : ''}>Delivery Partners</button>
+          <button onClick={() => setActiveTab('customers')} className={activeTab === 'customers' ? 'active' : ''}>Customers</button>
           <button onClick={() => setActiveTab('notifications')} className={activeTab === 'notifications' ? 'active' : ''}>Notifications</button>
         </div>
 
@@ -267,6 +284,39 @@ const AdminPage = () => {
             </table>
           </div>
         )}
+
+        {activeTab === 'customers' && (
+          <div className="data-section">
+            <h3>All Customers</h3>
+            <table className="user-table">
+              <thead>
+                <tr>
+                  <th>Username</th>
+                  <th>Name</th>
+                  <th>DOB</th>
+                  <th>Gender</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Address</th>
+                </tr>
+              </thead>
+              <tbody>
+                {customers.map((c, idx) => (
+                  <tr key={idx}>
+                    <td>{c.userName}</td>
+                    <td>{c.customerName}</td>
+                    <td>{c.dob}</td>
+                    <td>{c.gender}</td>
+                    <td>{c.email}</td>
+                    <td>{c.phone}</td>
+                    <td>{c.address}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
 
 
         {activeTab === 'notifications' && (          
