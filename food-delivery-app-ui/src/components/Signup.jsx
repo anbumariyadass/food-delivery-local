@@ -21,10 +21,9 @@ const Signup = () => {
     }
 
     try {
-      const response = await axios.post('http://localhost:8081/identity/register', {
+      const response = await axios.post('http://localhost:8081/identity/register/customer', {
         username,
-        password,
-        role: "CUSTOMER",
+        password,       
         active: "Y",
       });
 
