@@ -44,7 +44,10 @@ const Login = () => {
           navigate('/restaurant');
           break;
         case 'DELIVERY_PARTNER':
-          navigate('/delivery');
+          navigate('/deliverypartner');
+          break;
+        case 'DELIVERY_PERSONAL':
+          navigate('/deliverypersonal');
           break;
         default:
           alert('Unknown role. Cannot proceed.');

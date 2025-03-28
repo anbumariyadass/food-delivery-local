@@ -5,6 +5,7 @@ import AdminPage from '../components/AdminPage';
 import CustomerPage from '../components/CustomerPage';
 import RestaurantPage from '../components/RestaurantPage';
 import DeliveryPartnerPage from '../components/DeliveryPartnerPage';
+import DeliveryPersonalPage from '../components/DeliveryPersonalPage';
 
 const AppRoutes = () => {
   return (
@@ -14,7 +15,8 @@ const AppRoutes = () => {
       <Route path="/admin" element={<AdminPage />} />
       <Route path="/customer" element={<CustomerPage />} />
       <Route path="/restaurant" element={<RestaurantPage />} />
-      <Route path="/delivery" element={<DeliveryPartnerPage />} />
+      <Route path="/deliverypartner" element={<DeliveryPartnerPage />} />
+      <Route path="/deliverypersonal" element={<DeliveryPersonalPage />} />
     </Routes>
   );
 };
