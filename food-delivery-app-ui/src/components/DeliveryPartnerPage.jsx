@@ -37,10 +37,20 @@ const DeliveryPartnerPage = () => {
 
   const fetchInfo = () => {
     axios.get('http://localhost:8087/delivery/getDeliveryPartner', tokenHeader)
-      .then(res => {
+    .then(res => {
+      if (res.data?.data) {
         setInfo(res.data.data);
         setFormData(res.data.data);
-      })
+      } else {
+        setInfo(null);
+        setFormData({
+          deliveryPartnerName: '',
+          address: '',
+          email: '',
+          phone: ''
+        });
+      }
+    })    
       .catch(() => setInfo(null));
   };
 
