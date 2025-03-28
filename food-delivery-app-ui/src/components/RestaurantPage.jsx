@@ -5,11 +5,10 @@ import '../styles/RestaurantPage.css';
 
 const RestaurantPage = () => {
   const user = JSON.parse(localStorage.getItem('user'));
-  const [activeTab, setActiveTab] = useState('info');
+  const [activeTab, setActiveTab] = useState('orders');
 
   const [restaurantInfo, setRestaurantInfo] = useState(null);
   const [orders, setOrders] = useState([]);
-  const [notDeliveredOrders, setNotDeliveredOrders] = useState([]);
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [formData, setFormData] = useState(null); // Will hold editable data
@@ -121,7 +120,7 @@ const RestaurantPage = () => {
   };
 
   const updateOrderStatus = (orderId, newStatus) => {
-    axios.put(`http://localhost:8087/delivery/${orderId}/updateOrderStatus?orderStatus=${newStatus}`, {}, tokenHeader)
+    axios.put(`http://localhost:8086/order/${orderId}/updateOrderStatus?orderStatus=${newStatus}`, {}, tokenHeader)
       .then(() => fetchOrders())
       .catch(err => alert('Update Failed'));
   };
@@ -144,20 +143,14 @@ const RestaurantPage = () => {
     if (activeTab === 'orders') {
      fetchOrders();
     }
-
-    if (activeTab === 'notdelivered') {
-      axios.get('http://localhost:8086/order/restaurant/notdelivered', tokenHeader)
-        .then(res => setNotDeliveredOrders(res.data.data))
-        .catch(err => console.error(err));
-    }
+   
   }, [activeTab]);
 
   return (
     <Layout>
-      <div className="restaurant-tabs">
+      <div className="restaurant-tabs">        
+        <button onClick={() => setActiveTab('orders')} className={activeTab === 'orders' ? 'active' : ''}>All Orders</button>        
         <button onClick={() => setActiveTab('info')} className={activeTab === 'info' ? 'active' : ''}>My Restaurant Info</button>
-        <button onClick={() => setActiveTab('orders')} className={activeTab === 'orders' ? 'active' : ''}>All Orders</button>
-        <button onClick={() => setActiveTab('notdelivered')} className={activeTab === 'notdelivered' ? 'active' : ''}>Not Delivered Orders</button>
       </div>
 
       <div className="restaurant-content">
@@ -254,65 +247,6 @@ const RestaurantPage = () => {
                   </div>
                 )}
               </div>
-            ))}
-          </div>
-        )}
-
-
-        {activeTab === 'notdelivered' && (
-          <div>
-            <h3>Not Delivered Orders</h3>
-
-            <div style={{ marginBottom: '10px' }}>
-              <label style={{ marginRight: '8px' }}>Filter by Status:</label>
-              <select value={orderStatusFilter} onChange={(e) => setOrderStatusFilter(e.target.value)}>
-                <option value="ALL">All</option>
-                <option value="ORDERED">ORDERED</option>
-                <option value="ASSIGNED">ASSIGNED</option>
-                <option value="INTRANSIT">INTRANSIT</option>
-                <option value="DELIVERED">DELIVERED</option>
-                <option value="ABANDONED">ABANDONED</option>
-              </select>
-            </div>
-            
-            {notDeliveredOrders
-                .filter(order => orderStatusFilter === 'ALL' || order.orderStatus === orderStatusFilter)
-                .map(order => (
-              <div key={order.orderId} className="order-box">
-              <div className="order-summary">
-                <p><strong>Order ID:</strong> {order.orderId} | <strong>Status:</strong> {order.orderStatus}</p>
-                <button className="toggle-btn" onClick={() => toggleOrderDetails(order.orderId)}>
-                  {expandedOrders[order.orderId] ? 'Hide Details ▲' : 'Show Details ▼'}
-                </button>
-              </div>
-            
-              {expandedOrders[order.orderId] && (
-                <div className="order-details">
-                  <p><strong>Customer:</strong> {order.customerUserName}</p>
-                  <p><strong>Delivery Partner:</strong> {order.dlvryPartnerName}</p>
-                  <p><strong>Total:</strong> ₹{order.totalPrice}</p>
-                  <h5>Items:</h5>
-                    <table className="items-table">
-                      <thead>
-                        <tr>
-                          <th>Item Name</th>
-                          <th>Quantity</th>
-                          <th>Price</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {order.orderDetails.map(item => (
-                          <tr key={item.orderDtlId}>
-                            <td>{item.itemName}</td>
-                            <td>{item.quantity}</td>
-                            <td>₹{item.totalPrice}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                </div>
-              )}
-            </div>            
             ))}
           </div>
         )}
