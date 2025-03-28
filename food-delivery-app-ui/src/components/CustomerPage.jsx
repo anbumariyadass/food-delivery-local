@@ -5,7 +5,7 @@ import '../styles/CustomerPage.css';
 
 const CustomerPage = () => {
   const user = JSON.parse(localStorage.getItem('user'));
-  const [activeTab, setActiveTab] = useState('restaurants');
+  const [activeTab, setActiveTab] = useState('cart');
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
@@ -395,6 +395,7 @@ const CustomerPage = () => {
       });
       alert(res.data.message);
       setShowDishModal(false);
+      fetchCart();
     } catch (err) {
       console.error('Cart save failed', err);
       alert('Failed to save cart.');
@@ -465,6 +466,39 @@ const CustomerPage = () => {
     }
   };
   
+  const openDishModalFromCart = async (existingCart) => {
+    try {
+      const res = await axios.get('http://localhost:8083/restaurant/customer/order', {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+  
+      const fullRestaurant = res.data.data.find(r => r.userName === existingCart.restaurantUserName);
+      if (!fullRestaurant) {
+        alert('Restaurant info not found!');
+        return;
+      }
+  
+      // Pre-fill quantities from cart
+      const updatedDishes = fullRestaurant.dishes.map(dish => {
+        const existingDish = existingCart.dishes.find(d => d.itemId === String(dish.id));
+        return {
+          ...dish,
+          quantity: existingDish ? existingDish.quantity : 0,
+        };
+      });
+  
+      fullRestaurant.dishes = updatedDishes;
+      setSelectedRestaurant(fullRestaurant);
+  
+      // Set selectedDishes based on cart
+      setSelectedDishes(existingCart.dishes);
+      setCartRestaurantUserName(existingCart.restaurantUserName);
+      setShowDishModal(true);
+    } catch (err) {
+      console.error('Failed to load restaurant info:', err);
+      alert('Error opening cart editor.');
+    }
+  };
   
   
 
@@ -555,6 +589,13 @@ const CustomerPage = () => {
         
               <div style={{ marginTop: '20px' }}>
                 <button className="add-btn" onClick={handlePlaceOrder}>Place Order</button>
+                <button
+                  className="edit-btn"
+                  onClick={() => openDishModalFromCart(cart)}                  
+                >
+                  🛠 Edit Cart
+                </button>
+
                 <button
                   className="delete-btn"
                   onClick={handleDeleteCart}
@@ -703,7 +744,7 @@ const CustomerPage = () => {
                 <div>Dish</div>
                 <div>Description</div>
                 <div>Price</div>
-                <div>Cart#</div>
+                <div>Quantity</div>
               </div>
 
               {selectedRestaurant.dishes && selectedRestaurant.dishes.length > 0 ? (
@@ -714,8 +755,11 @@ const CustomerPage = () => {
                     <div>{dish.description}</div>
                     <div>₹{dish.price}</div>
                     <div className="quantity-controls">
-                      <button onClick={() => updateDishQty(dish, -1)}>-</button>
-                      <input
+                    <button onClick={() => {
+                      const currentQty = Number(getDishQty(dish)) || 0;
+                      updateDishQty(dish, currentQty - 1, true);
+                      }}>-</button>
+                     <input
                         type="text"
                         className="quantity-input"
                         value={getDishQty(dish).toString()}
@@ -727,7 +771,10 @@ const CustomerPage = () => {
                           }
                         }}
                       />
-                      <button onClick={() => updateDishQty(dish, 1)}>+</button>
+                      <button onClick={() => {
+                        const currentQty = Number(getDishQty(dish)) || 0;
+                        updateDishQty(dish, currentQty + 1, true);
+                      }}>+</button>
                     </div>
                   </li>
                 ))}

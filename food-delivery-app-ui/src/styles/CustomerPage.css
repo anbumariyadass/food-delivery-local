@@ -419,3 +419,20 @@ button {
   background-color: #f2f2f2;
 }
 
+.edit-btn {
+  background-color: #007bff; /* Bootstrap Blue */
+  color: #fff;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.edit-btn:hover {
+  background-color: #0069d9;
+}
+
+
