@@ -76,22 +76,29 @@ const DeliveryPartnerPage = () => {
   };
 
   const handleSavePersonal = () => {
-    const identityPayload = {
-      username: personalForm.userName,
-      password: personalForm.password,
-      active: 'Y'
+    const savePersonal = () => {
+      axios.post('http://localhost:8087/delivery/saveDlvryPersonal', personalForm, tokenHeader)
+        .then(() => {
+          alert('Personal saved successfully');
+          fetchDeliveryPersonals();
+          setShowPersonalModal(false);
+        })
+        .catch(() => alert('Save failed'));
     };
-
-    axios.post('http://localhost:8081/identity/register/deliveryPersonal', identityPayload, tokenHeader)
-      .then(() => {
-        axios.post('http://localhost:8087/delivery/saveDlvryPersonal', personalForm, tokenHeader)
-          .then(() => {
-            alert('Personal saved successfully');
-            fetchDeliveryPersonals();
-            setShowPersonalModal(false);
-          });
-      })
-      .catch(() => alert('Save failed'));
+  
+    if (!editingUserName) {
+      const identityPayload = {
+        username: personalForm.userName,
+        password: personalForm.password,
+        active: 'Y'
+      };
+  
+      axios.post('http://localhost:8081/identity/register/deliveryPersonal', identityPayload, tokenHeader)
+        .then(() => savePersonal())
+        .catch(() => alert('User registration failed'));
+    } else {
+      savePersonal();
+    }
   };
 
   const handleDeletePersonal = (userName) => {
@@ -244,8 +251,10 @@ const DeliveryPartnerPage = () => {
         <div className="modal-overlay">
           <div className="modal-box">
             <h3>{editingUserName ? 'Edit' : 'Add'} Delivery Personal</h3>
-            <input type="text" placeholder="Username" value={personalForm.userName} onChange={(e) => setPersonalForm({ ...personalForm, userName: e.target.value })} />
-            <input type="password" placeholder="Password" value={personalForm.password} onChange={(e) => setPersonalForm({ ...personalForm, password: e.target.value })} />
+            <input type="text" placeholder="Username" value={personalForm.userName} readOnly={!!editingUserName} onChange={(e) => setPersonalForm({ ...personalForm, userName: e.target.value })} />
+            {!editingUserName && (
+              <input type="password" placeholder="Password" value={personalForm.password} onChange={(e) => setPersonalForm({ ...personalForm, password: e.target.value })} />
+            )}
             <input type="text" placeholder="Name" value={personalForm.deliveryPersonalName} onChange={(e) => setPersonalForm({ ...personalForm, deliveryPersonalName: e.target.value })} />
             <input type="text" placeholder="Address" value={personalForm.address} onChange={(e) => setPersonalForm({ ...personalForm, address: e.target.value })} />
             <input type="email" placeholder="Email" value={personalForm.email} onChange={(e) => setPersonalForm({ ...personalForm, email: e.target.value })} />
