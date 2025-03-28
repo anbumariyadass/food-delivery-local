@@ -17,11 +17,22 @@ const RestaurantPage = () => {
   const [showDishModal, setShowDishModal] = useState(false);
   const [dishesData, setDishesData] = useState([]);
 
+  const [expandedOrders, setExpandedOrders] = useState({});
+  const [orderStatusFilter, setOrderStatusFilter] = useState('ALL');
+
   const tokenHeader = {
     headers: {
       Authorization: `Bearer ${user?.token}`
     }
   };
+
+  const toggleOrderDetails = (orderId) => {
+    setExpandedOrders((prev) => ({
+      ...prev,
+      [orderId]: !prev[orderId],
+    }));
+  };
+  
 
   const openEditModal = () => {
     if (restaurantInfo) {
@@ -168,43 +179,118 @@ const RestaurantPage = () => {
           </>
         )}
 
-
         {activeTab === 'orders' && (
           <div>
             <h3>All Orders</h3>
-            {orders.map(order => (
+
+            <div style={{ marginBottom: '10px' }}>
+              <label style={{ marginRight: '8px' }}>Filter by Status:</label>
+              <select value={orderStatusFilter} onChange={(e) => setOrderStatusFilter(e.target.value)}>
+                <option value="ALL">All</option>
+                <option value="ORDERED">ORDERED</option>
+                <option value="ASSIGNED">ASSIGNED</option>
+                <option value="INTRANSIT">INTRANSIT</option>
+                <option value="DELIVERED">DELIVERED</option>
+                <option value="ABANDONED">ABANDONED</option>
+              </select>
+            </div>
+
+            {orders
+            .filter(order => orderStatusFilter === 'ALL' || order.orderStatus === orderStatusFilter)
+            .map(order => (
               <div key={order.orderId} className="order-box">
-                <p><strong>Order ID:</strong> {order.orderId} | <strong>Status:</strong> {order.orderStatus}</p>
-                <p><strong>Customer:</strong> {order.customerUserName}</p>
-                <p><strong>Delivery Partner:</strong> {order.dlvryPartnerName}</p>
-                <p><strong>Total:</strong> ₹{order.totalPrice}</p>
-                <h5>Items:</h5>
-                <ul>
-                  {order.orderDetails.map(item => (
-                    <li key={item.orderDtlId}>{item.itemName} × {item.quantity} – ₹{item.totalPrice}</li>
-                  ))}
-                </ul>
+                <div className="order-summary">
+                  <p><strong>Order ID:</strong> {order.orderId} | <strong>Status:</strong> {order.orderStatus}</p>
+                  <button className="toggle-btn" onClick={() => toggleOrderDetails(order.orderId)}>
+                    {expandedOrders[order.orderId] ? 'Hide Details ▲' : 'Show Details ▼'}
+                  </button>
+                </div>
+
+                {expandedOrders[order.orderId] && (
+                  <div className="order-details">
+                    <p><strong>Customer:</strong> {order.customerUserName}</p>
+                    <p><strong>Delivery Partner:</strong> {order.dlvryPartnerName}</p>
+                    <p><strong>Total:</strong> ₹{order.totalPrice}</p>                    
+                    <table className="items-table">
+                      <thead>
+                        <tr>
+                          <th>Item Name</th>
+                          <th>Quantity</th>
+                          <th>Price</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {order.orderDetails.map(item => (
+                          <tr key={item.orderDtlId}>
+                            <td>{item.itemName}</td>
+                            <td>{item.quantity}</td>
+                            <td>₹{item.totalPrice}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         )}
 
+
         {activeTab === 'notdelivered' && (
           <div>
             <h3>Not Delivered Orders</h3>
-            {notDeliveredOrders.map(order => (
+
+            <div style={{ marginBottom: '10px' }}>
+              <label style={{ marginRight: '8px' }}>Filter by Status:</label>
+              <select value={orderStatusFilter} onChange={(e) => setOrderStatusFilter(e.target.value)}>
+                <option value="ALL">All</option>
+                <option value="ORDERED">ORDERED</option>
+                <option value="ASSIGNED">ASSIGNED</option>
+                <option value="INTRANSIT">INTRANSIT</option>
+                <option value="DELIVERED">DELIVERED</option>
+                <option value="ABANDONED">ABANDONED</option>
+              </select>
+            </div>
+            
+            {notDeliveredOrders
+                .filter(order => orderStatusFilter === 'ALL' || order.orderStatus === orderStatusFilter)
+                .map(order => (
               <div key={order.orderId} className="order-box">
+              <div className="order-summary">
                 <p><strong>Order ID:</strong> {order.orderId} | <strong>Status:</strong> {order.orderStatus}</p>
-                <p><strong>Customer:</strong> {order.customerUserName}</p>
-                <p><strong>Delivery Partner:</strong> {order.dlvryPartnerName}</p>
-                <p><strong>Total:</strong> ₹{order.totalPrice}</p>
-                <h5>Items:</h5>
-                <ul>
-                  {order.orderDetails.map(item => (
-                    <li key={item.orderDtlId}>{item.itemName} × {item.quantity} – ₹{item.totalPrice}</li>
-                  ))}
-                </ul>
+                <button className="toggle-btn" onClick={() => toggleOrderDetails(order.orderId)}>
+                  {expandedOrders[order.orderId] ? 'Hide Details ▲' : 'Show Details ▼'}
+                </button>
               </div>
+            
+              {expandedOrders[order.orderId] && (
+                <div className="order-details">
+                  <p><strong>Customer:</strong> {order.customerUserName}</p>
+                  <p><strong>Delivery Partner:</strong> {order.dlvryPartnerName}</p>
+                  <p><strong>Total:</strong> ₹{order.totalPrice}</p>
+                  <h5>Items:</h5>
+                    <table className="items-table">
+                      <thead>
+                        <tr>
+                          <th>Item Name</th>
+                          <th>Quantity</th>
+                          <th>Price</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {order.orderDetails.map(item => (
+                          <tr key={item.orderDtlId}>
+                            <td>{item.itemName}</td>
+                            <td>{item.quantity}</td>
+                            <td>₹{item.totalPrice}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                </div>
+              )}
+            </div>            
             ))}
           </div>
         )}
