@@ -119,6 +119,18 @@ const RestaurantPage = () => {
       alert('Failed to update dishes.');
     }
   };
+
+  const updateOrderStatus = (orderId, newStatus) => {
+    axios.put(`http://localhost:8087/delivery/${orderId}/updateOrderStatus?orderStatus=${newStatus}`, {}, tokenHeader)
+      .then(() => fetchOrders())
+      .catch(err => alert('Update Failed'));
+  };
+
+  const fetchOrders = () => {
+    axios.get('http://localhost:8086/order/restaurant', tokenHeader)
+        .then(res => setOrders(res.data.data))
+        .catch(err => console.error(err));
+  };
   
   
 
@@ -130,9 +142,7 @@ const RestaurantPage = () => {
     }
 
     if (activeTab === 'orders') {
-      axios.get('http://localhost:8086/order/restaurant', tokenHeader)
-        .then(res => setOrders(res.data.data))
-        .catch(err => console.error(err));
+     fetchOrders();
     }
 
     if (activeTab === 'notdelivered') {
@@ -187,8 +197,9 @@ const RestaurantPage = () => {
               <label style={{ marginRight: '8px' }}>Filter by Status:</label>
               <select value={orderStatusFilter} onChange={(e) => setOrderStatusFilter(e.target.value)}>
                 <option value="ALL">All</option>
-                <option value="ORDERED">ORDERED</option>
-                <option value="ASSIGNED">ASSIGNED</option>
+                <option value="ORDERED">ORDERED</option>   
+                <option value="ACKNOWLEDGED">ACKNOWLEDGED</option>
+                <option value="READYTOPICK">READYTOPICK</option>           
                 <option value="INTRANSIT">INTRANSIT</option>
                 <option value="DELIVERED">DELIVERED</option>
                 <option value="ABANDONED">ABANDONED</option>
@@ -200,7 +211,18 @@ const RestaurantPage = () => {
             .map(order => (
               <div key={order.orderId} className="order-box">
                 <div className="order-summary">
-                  <p><strong>Order ID:</strong> {order.orderId} | <strong>Status:</strong> {order.orderStatus}</p>
+                  <p><strong>Order ID:</strong> {order.orderId} | <strong>Status:</strong> {order.orderStatus}
+                  {order.orderStatus === 'ORDERED' && (
+                  <div style={{ marginTop: '10px' }}>                   
+                    <button className="add-btn" onClick={() => updateOrderStatus(order.orderId, 'ACKNOWLEDGED')}>Acknowledge</button>
+                  </div>
+                )}
+                {order.orderStatus === 'ACKNOWLEDGED' && (
+                  <div style={{ marginTop: '10px' }}>                   
+                    <button className="add-btn" onClick={() => updateOrderStatus(order.orderId, 'READYTOPICK')}>Ready to pick</button>
+                  </div>
+                )}
+                </p>
                   <button className="toggle-btn" onClick={() => toggleOrderDetails(order.orderId)}>
                     {expandedOrders[order.orderId] ? 'Hide Details ▲' : 'Show Details ▼'}
                   </button>

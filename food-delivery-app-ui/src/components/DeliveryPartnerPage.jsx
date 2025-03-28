@@ -121,8 +121,7 @@ const DeliveryPartnerPage = () => {
 
   const assignDeliveryPersonal = async (orderId, userName) => {   
     try {
-      await axios.put(`http://localhost:8087/delivery/${orderId}/assignDeliveryPersonal?userName=${userName}`, {}, tokenHeader);
-      await axios.put(`http://localhost:8087/delivery/${orderId}/updateOrderStatus?orderStatus=ASSIGNED`, {}, tokenHeader);
+      await axios.put(`http://localhost:8087/delivery/${orderId}/assignDeliveryPersonal?userName=${userName}`, {}, tokenHeader);     
       alert('Assigned successfully');
       fetchOrders();
     } catch (error) {
@@ -179,8 +178,9 @@ const DeliveryPartnerPage = () => {
             <label>Status Filter: </label>
             <select onChange={(e) => setFilterStatus(e.target.value)} value={filterStatus}>
               <option value="ALL">ALL</option>
-              <option value="ORDERED">ORDERED</option>
-              <option value="ASSIGNED">ASSIGNED</option>
+              <option value="ORDERED">ORDERED</option>   
+              <option value="ACKNOWLEDGED">ACKNOWLEDGED</option>
+              <option value="READYTOPICK">READYTOPICK</option>           
               <option value="INTRANSIT">INTRANSIT</option>
               <option value="DELIVERED">DELIVERED</option>
               <option value="ABANDONED">ABANDONED</option>
@@ -193,8 +193,9 @@ const DeliveryPartnerPage = () => {
                 <p><strong>Address:</strong> {order.customerContactAddress}</p>
                 <p><strong>Status:</strong> {order.orderStatus}</p>
                 <p><strong>Total:</strong> ₹{order.totalPrice}</p>
+                <p><strong>Delivery Personal:</strong> {order.deliveryPersonalUserName}</p>
 
-                {order.orderStatus === 'ORDERED' && (
+                { (!order.deliveryPersonalUserName || order.deliveryPersonalUserName.trim() === '')  && (
                   <div>
                     <strong>Select Delivery Personal:</strong>
                     <select onChange={(e) => assignDeliveryPersonal(order.orderId, e.target.value)} defaultValue="">
