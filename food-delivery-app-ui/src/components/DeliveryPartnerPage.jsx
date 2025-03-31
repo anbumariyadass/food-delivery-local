@@ -192,8 +192,7 @@ const DeliveryPartnerPage = () => {
               <option value="ACKNOWLEDGED">ACKNOWLEDGED</option>
               <option value="READYTOPICK">READYTOPICK</option>           
               <option value="INTRANSIT">INTRANSIT</option>
-              <option value="DELIVERED">DELIVERED</option>
-              <option value="ABANDONED">ABANDONED</option>
+              <option value="DELIVERED">DELIVERED</option>    
             </select>
             {filteredOrders.map(order => (
               <div key={order.orderId} className="order-box">

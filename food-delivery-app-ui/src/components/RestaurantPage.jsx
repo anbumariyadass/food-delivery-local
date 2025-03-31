@@ -120,10 +120,48 @@ const RestaurantPage = () => {
   };
 
   const updateOrderStatus = (orderId, newStatus) => {
-    axios.put(`http://localhost:8086/order/${orderId}/updateOrderStatus?orderStatus=${newStatus}`, {}, tokenHeader)
-      .then(() => fetchOrders())
-      .catch(err => alert('Update Failed'));
+    const updateOrderAndDelivery = () => {
+      const orderApi = axios.put(
+        `http://localhost:8086/order/${orderId}/updateOrderStatus?orderStatus=${newStatus}`,
+        {},
+        tokenHeader
+      );
+  
+      const deliveryApi = axios.put(
+        `http://localhost:8087/delivery/${orderId}/updateOrderStatus?orderStatus=${newStatus}`,
+        {},
+        tokenHeader
+      );
+  
+      Promise.all([orderApi, deliveryApi])
+        .then(() => {
+          console.log('All updates successful');
+          fetchOrders();
+        })
+        .catch(err => {
+          console.error('Update failed', err);
+          alert('Update Failed');
+        });
+    };
+  
+    if (newStatus === 'ACKNOWLEDGED') {
+      // Step 1: Process Orders (POST) if newStatus is ACKNOWLEDGED
+      axios.post('http://localhost:8087/delivery/processOrders', {}, tokenHeader)
+        .then(() => {
+          console.log('Orders processed');
+          updateOrderAndDelivery(); // Continue with Step 2 and 3
+        })
+        .catch(err => {
+          console.error('Order processing failed', err);
+          alert('Order processing failed');
+        });
+    } else {
+      // Directly update order and delivery status if not ACKNOWLEDGED
+      updateOrderAndDelivery();
+    }
   };
+  
+  
 
   const fetchOrders = () => {
     axios.get('http://localhost:8086/order/restaurant', tokenHeader)
@@ -194,8 +232,7 @@ const RestaurantPage = () => {
                 <option value="ACKNOWLEDGED">ACKNOWLEDGED</option>
                 <option value="READYTOPICK">READYTOPICK</option>           
                 <option value="INTRANSIT">INTRANSIT</option>
-                <option value="DELIVERED">DELIVERED</option>
-                <option value="ABANDONED">ABANDONED</option>
+                <option value="DELIVERED">DELIVERED</option>                
               </select>
             </div>
 

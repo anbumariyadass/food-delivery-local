@@ -622,11 +622,11 @@ const CustomerPage = () => {
               <label>Status Filter: </label>
               <select value={orderStatusFilter} onChange={(e) => setOrderStatusFilter(e.target.value)}>
                 <option value="ALL">All</option>
-                <option value="ORDERED">Ordered</option>
-                <option value="DELIVERED">Delivered</option>
-                <option value="INTRANSIT">In Transit</option>
-                <option value="COMPLETED">Completed</option>
-                <option value="CLOSED">Closed</option>
+                <option value="ORDERED">ORDERED</option>   
+                <option value="ACKNOWLEDGED">ACKNOWLEDGED</option>
+                <option value="READYTOPICK">READYTOPICK</option>           
+                <option value="INTRANSIT">INTRANSIT</option>
+                <option value="DELIVERED">DELIVERED</option>    
               </select>
             </div>
 
